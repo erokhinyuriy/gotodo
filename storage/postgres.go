@@ -1,0 +1,81 @@
+package storage
+
+import (
+	"errors"
+	e "example/gotodo/entity"
+	"fmt"
+
+	"github.com/google/uuid"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+var (
+	ErrConnectionFail   = errors.New("cannot connection to db")
+	ErrCloseConnection  = errors.New("errors during attemption close db connection")
+	ErrListNotFound     = errors.New("list not found")
+	ErrWithGettingLists = errors.New("some trubles with getting lists")
+
+	MsgListCannotUpdate = "list cannot updated"
+	MsgListWasUpdated   = "list was updated"
+	MsgListWasDeleted   = "list with id: %s was deleted"
+)
+
+type postgresStorage struct {
+	db *gorm.DB
+}
+
+func NewPostgresStorage() (*postgresStorage, error) {
+	dsn := "host=localhost user=userlst password=admin dbname=todo port=5432 sslmode=disable"
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return &postgresStorage{}, ErrConnectionFail
+	}
+	return &postgresStorage{db: db}, nil
+}
+
+// LIST
+
+func (s *postgresStorage) GetAll() ([]e.TdList, error) {
+	var lists []e.TdList
+	err := s.db.Model(&e.TdList{}).Find(&lists).Error
+	if err != nil {
+		return lists, ErrWithGettingLists
+	}
+	return lists, nil
+}
+
+func (s *postgresStorage) GetByID(id uuid.UUID) (e.TdList, error) {
+	var list e.TdList
+	s.db.First(&list, id)
+	if list == (e.TdList{}) {
+		return list, ErrListNotFound
+	}
+	return list, nil
+}
+
+func (s *postgresStorage) Create(list *e.TdList) (uuid.UUID, error) {
+	result := s.db.Create(&list)
+	if result.Error != nil {
+		return uuid.Nil, result.Error
+	}
+	return list.Id, nil
+}
+
+func (s *postgresStorage) Update(list *e.TdList) (string, error) {
+	var curList e.TdList
+	err := s.db.First(&curList, &list.Id).Error
+	if err != nil {
+		return MsgListCannotUpdate, ErrListNotFound
+	}
+	curList.Name = list.Name
+	curList.Date = list.Date
+	s.db.Save(&curList)
+	return MsgListWasUpdated, nil
+}
+
+func (s *postgresStorage) Delete(id uuid.UUID) (string, error) {
+	s.db.Where("id = ?", id).Delete(&e.TdList{})
+	result := fmt.Sprintf(MsgListWasDeleted, id.String())
+	return result, nil
+}
