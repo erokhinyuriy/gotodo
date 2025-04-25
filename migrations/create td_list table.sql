@@ -1,5 +1,5 @@
 create table td_list(
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    name character varying(50) not null,
+    id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    name character varying(50) not null COLLATE pg_catalog."ru-RU-x-icu",
     date timestamp without time zone
 );

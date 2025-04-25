@@ -19,6 +19,12 @@ var (
 	MsgListCannotUpdate = "list cannot updated"
 	MsgListWasUpdated   = "list was updated"
 	MsgListWasDeleted   = "list with id: %s was deleted"
+
+	ErrTaskNotFound = errors.New("task not found")
+
+	MsgTaskWasUpdated   = "task was updated"
+	MsgTaskCannotUpdate = "task cannot updated"
+	MsgTaskWasDeleted   = ""
 )
 
 type postgresStorage struct {
@@ -47,8 +53,8 @@ func (s *postgresStorage) GetAll() ([]e.TdList, error) {
 
 func (s *postgresStorage) GetByID(id uuid.UUID) (e.TdList, error) {
 	var list e.TdList
-	s.db.First(&list, id)
-	if list == (e.TdList{}) {
+	err := s.db.Preload("Tasks").First(&list, id).Error
+	if err != nil {
 		return list, ErrListNotFound
 	}
 	return list, nil
@@ -75,7 +81,46 @@ func (s *postgresStorage) Update(list *e.TdList) (string, error) {
 }
 
 func (s *postgresStorage) Delete(id uuid.UUID) (string, error) {
+	s.db.Where("list_id = ?", id).Delete(&e.TdTask{})
 	s.db.Where("id = ?", id).Delete(&e.TdList{})
 	result := fmt.Sprintf(MsgListWasDeleted, id.String())
+	return result, nil
+}
+
+// TASK
+
+func (s *postgresStorage) GetTaskByID(id uuid.UUID) (e.TdTask, error) {
+	var task e.TdTask
+	err := s.db.First(&task, id).Error
+	if err != nil {
+		return task, ErrTaskNotFound
+	}
+	return task, nil
+}
+
+func (s *postgresStorage) CreateTask(task *e.TdTask) (uuid.UUID, error) {
+	result := s.db.Create(&task)
+	if result.Error != nil {
+		return uuid.Nil, result.Error
+	}
+	return task.Id, nil
+}
+
+func (s *postgresStorage) UpdateTask(task *e.TdTask) (string, error) {
+	var curTask e.TdTask
+	err := s.db.First(&curTask, &task.Id).Error
+	if err != nil {
+		return MsgTaskCannotUpdate, ErrTaskNotFound
+	}
+	curTask.Name = task.Name
+	curTask.Description = task.Description
+	curTask.Date = task.Date
+	s.db.Save(&curTask)
+	return MsgTaskWasUpdated, nil
+}
+
+func (s *postgresStorage) DeleteTask(id uuid.UUID) (string, error) {
+	s.db.Where("id = ?", id).Delete(&e.TdTask{})
+	result := fmt.Sprintf(MsgTaskWasDeleted, id.String())
 	return result, nil
 }

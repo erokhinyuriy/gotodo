@@ -1,12 +1,12 @@
 package main
 
 import (
+	e "example/gotodo/entity"
 	lstservice "example/gotodo/service/listservice"
+	tservice "example/gotodo/service/taskservice"
 	str "example/gotodo/storage"
 	"fmt"
 	"net/http"
-
-	e "example/gotodo/entity"
 
 	cors "github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -16,7 +16,8 @@ import (
 var (
 	MsgGettingListsErrorOccurs = "error occurs getting lists: $s"
 	MsgGuidNotParsed           = "guid cannot been parsed"
-	MsgJsonCannotBeingParsed   = "error occurs parse list json"
+	MsgListJsonCannotParsed    = "error occurs parse list json"
+	MsgTaskJsonCannotParsed    = "error occurs parse task json"
 )
 
 func main() {
@@ -30,6 +31,8 @@ func main() {
 
 	// сервис для работы с TdList
 	listService := lstservice.New(storage)
+	// сервис для работы с TdTask
+	taskService := tservice.New(storage)
 
 	r := gin.New()
 
@@ -76,7 +79,7 @@ func main() {
 	r.POST("/lists", func(c *gin.Context) {
 		var list e.TdList
 		if err := c.BindJSON(&list); err != nil {
-			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgJsonCannotBeingParsed))
+			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgListJsonCannotParsed))
 		}
 		guid, err := listService.Create(&list)
 		if err != nil {
@@ -90,7 +93,7 @@ func main() {
 	r.PUT("/lists", func(c *gin.Context) {
 		var updList e.TdList
 		if err := c.BindJSON(&updList); err != nil {
-			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgJsonCannotBeingParsed))
+			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgListJsonCannotParsed))
 		}
 		result, err := listService.Update(&updList)
 		if err != nil {
@@ -107,6 +110,66 @@ func main() {
 			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgGuidNotParsed))
 		}
 		result, err := listService.Delete(guid)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(fmt.Sprintf("%s", err)))
+		}
+
+		c.IndentedJSON(http.StatusOK, result)
+	})
+
+	/*
+	 * TASKS
+	 */
+
+	// GetByID
+	r.GET("/tasks/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		guidId, err := uuid.Parse(id)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgGuidNotParsed))
+		}
+		task, err := taskService.GetTaskByID(guidId)
+		if err != nil {
+			c.IndentedJSON(http.StatusNotFound, initMessage(fmt.Sprintf("%s", err)))
+		}
+		c.IndentedJSON(http.StatusOK, task)
+	})
+
+	// Create
+	r.POST("/tasks", func(c *gin.Context) {
+		var task e.TdTask
+		if err := c.BindJSON(&task); err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgTaskJsonCannotParsed))
+		}
+		guid, err := taskService.CreateTask(&task)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(fmt.Sprintf("%s", err)))
+		}
+
+		c.IndentedJSON(http.StatusCreated, guid)
+	})
+
+	// Update
+	r.PUT("/tasks", func(c *gin.Context) {
+		var updTask e.TdTask
+		if err := c.BindJSON(&updTask); err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgTaskJsonCannotParsed))
+		}
+		result, err := taskService.UpdateTask(&updTask)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(fmt.Sprintf("%s", err)))
+		}
+		c.IndentedJSON(http.StatusOK, result)
+	})
+
+	// Delete
+	r.DELETE("/tasks/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		guid, err := uuid.Parse(id)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgGuidNotParsed))
+		}
+		result, err := taskService.DeleteTask(guid)
 		if err != nil {
 			c.IndentedJSON(http.StatusBadRequest, initMessage(fmt.Sprintf("%s", err)))
 		}
