@@ -6,6 +6,8 @@ Web API for ToDo list application.
 
 API's using Postman:
 
+For LISTS
+
 GetAll      GET:    http://localhost:8447/lists
 
 CreateList  POST:   http://localhost:8447/lists
@@ -31,7 +33,8 @@ Returned result (for example):
 {
     "Id": "86e0dda5-f6ae-461a-8e14-d6a068c38863",
     "Name": "test1",
-    "Date": "0001-01-01T00:00:00Z"
+    "Date": "0001-01-01T00:00:00Z",
+    "Tasks": null
 }
 ```
 
@@ -56,3 +59,11 @@ DeleteList:  DELETE: http://localhost:8447/lists/86e0dda5-f6ae-461a-8e14-d6a068c
 ```
 "list with id: 86e0dda5-f6ae-461a-8e14-d6a068c38863 was deleted"
 ```
+
+For TASKS
+
+GetAll GET: http://localhost:8447/tasks
+GetTaskById  GET:   http://localhost:8447/tasks/86e0dda5-f6ae-461a-8e14-d6a068c38863
+CreateTask  POST:   http://localhost:8447/tasks
+UpdateTask  PUT:    http://localhost:8447/tasks
+DeleteTask:  DELETE: http://localhost:8447/tasks/86e0dda5-f6ae-461a-8e14-d6a068c38863
