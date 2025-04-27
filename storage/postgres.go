@@ -24,7 +24,10 @@ var (
 
 	MsgTaskWasUpdated   = "task was updated"
 	MsgTaskCannotUpdate = "task cannot updated"
-	MsgTaskWasDeleted   = ""
+	MsgTaskWasDeleted   = "task was deleted"
+
+	LocalPgConnection  = "host=localhost user=userlst password=admin dbname=todo port=5432 sslmode=disable"
+	DockerPgConnection = "host=my-postgres user=postgres password=admin dbname=postgres port=5432 sslmode=disable"
 )
 
 type postgresStorage struct {
@@ -32,11 +35,13 @@ type postgresStorage struct {
 }
 
 func NewPostgresStorage() (*postgresStorage, error) {
-	dsn := "host=localhost user=userlst password=admin dbname=todo port=5432 sslmode=disable"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	//dsn := "host=localhost user=userlst password=admin dbname=todo port=5433 sslmode=disable"
+	db, err := gorm.Open(postgres.Open(DockerPgConnection), &gorm.Config{})
 	if err != nil {
 		return &postgresStorage{}, ErrConnectionFail
 	}
+	db.AutoMigrate(&e.TdList{})
+	db.AutoMigrate(&e.TdTask{})
 	return &postgresStorage{db: db}, nil
 }
 

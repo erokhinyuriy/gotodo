@@ -1,6 +1,32 @@
-version: "3.8"
 services:
-  web:
+  main:
+    container_name: gotodo
     build: .
     ports:
       - "8447:8447"
+    restart: on-failure
+    depends_on:
+      - my-postgres
+    networks:
+      - ps
+
+  my-postgres:
+    #hostname: host.docker.internal
+    image: postgres
+    container_name: my-postgres
+    ports:
+      - "5433:5432"
+    restart: always
+    environment:         
+      POSTGRES_HOST: my-postgres
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "admin"
+      POSTGRES_DB: "postgres"
+    volumes: 
+      - ./db/data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    networks:
+      - ps
+
+networks:
+  ps:

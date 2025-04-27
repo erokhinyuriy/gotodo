@@ -1,15 +1,22 @@
-FROM golang:alpine
+FROM golang:alpine AS builder
 
-WORKDIR /app
+WORKDIR /usr/local/src
 
-COPY go.mod ./
-
+#dependencies
+COPY ["go.mod", "go.sum", "./"]
 RUN go mod download
 
+#build
 COPY . .
+RUN go build -o main main.go
 
-RUN go build -o main .
 
-EXPOSE 8447
+FROM alpine
+
+WORKDIR /usr/local/src
+
+COPY --from=builder /usr/local/src/ /usr/local/src/
+
+RUN chmod a+x .
 
 CMD ["./main"]

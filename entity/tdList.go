@@ -7,7 +7,7 @@ import (
 )
 
 type TdList struct {
-	Id    uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	Id    uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
 	Name  string
 	Date  time.Time
 	Tasks []TdTask `gorm:"foreignKey:ListId"`
