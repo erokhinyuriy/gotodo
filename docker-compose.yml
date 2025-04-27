@@ -3,23 +3,29 @@ services:
     container_name: gotodo
     build: .
     ports:
-      - "8447:8447"
+      - "8448:8447"
     restart: on-failure
     depends_on:
-      - my-postgres
+      my-postgres:
+        condition: service_healthy
     networks:
       - ps
 
   my-postgres:
-    #hostname: host.docker.internal
+    hostname: my-postgres
     image: postgres
     container_name: my-postgres
     ports:
       - "5433:5432"
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d postgres -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:         
       POSTGRES_HOST: my-postgres
-      POSTGRES_USER: "postgres"
+      PGUSER: "postgres"
       POSTGRES_PASSWORD: "admin"
       POSTGRES_DB: "postgres"
     volumes: 

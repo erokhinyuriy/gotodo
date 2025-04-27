@@ -35,6 +35,7 @@ func main() {
 	taskService := tservice.New(storage)
 
 	r := gin.New()
+	r.SetTrustedProxies(nil)
 
 	corsSettings := cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
