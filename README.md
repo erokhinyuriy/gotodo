@@ -10,9 +10,7 @@ docker compose -f docker-compose.yml up
 
 ## Description
 
-SETUP:
-
-docker compose -f docker-compose.yml up
+To run the service locally, use :8447 but if you run the application in a docker container, you must use :8778.
 
 API's using Postman:
 
