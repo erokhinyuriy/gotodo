@@ -1,6 +1,12 @@
 # Project "gotodo"
 
-Web API for ToDo list application.
+Web API service for ToDo list application.
+
+## Docker
+
+```
+docker compose -f docker-compose.yml up
+```
 
 ## Description
 

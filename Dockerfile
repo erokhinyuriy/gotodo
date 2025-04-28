@@ -17,6 +17,8 @@ WORKDIR /usr/local/src
 
 COPY --from=builder /usr/local/src/ /usr/local/src/
 
+EXPOSE 8447
+
 RUN chmod a+x .
 
 CMD ["./main"]

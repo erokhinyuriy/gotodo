@@ -34,6 +34,7 @@ func main() {
 	// сервис для работы с TdTask
 	taskService := tservice.New(storage)
 
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.SetTrustedProxies(nil)
 
@@ -178,7 +179,7 @@ func main() {
 		c.IndentedJSON(http.StatusOK, result)
 	})
 
-	r.Run("localhost:8447")
+	r.Run("0.0.0.0:8447")
 }
 
 func CORSMiddleware() gin.HandlerFunc {
