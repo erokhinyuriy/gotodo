@@ -4,6 +4,10 @@ Web API for ToDo list application.
 
 ## Description
 
+SETUP:
+
+docker compose -f docker-compose.yml up
+
 API's using Postman:
 
 For LISTS
@@ -63,7 +67,11 @@ DeleteList:  DELETE: http://localhost:8447/lists/86e0dda5-f6ae-461a-8e14-d6a068c
 For TASKS
 
 GetAll GET: http://localhost:8447/tasks
+
 GetTaskById  GET:   http://localhost:8447/tasks/86e0dda5-f6ae-461a-8e14-d6a068c38863
+
 CreateTask  POST:   http://localhost:8447/tasks
+
 UpdateTask  PUT:    http://localhost:8447/tasks
+
 DeleteTask:  DELETE: http://localhost:8447/tasks/86e0dda5-f6ae-461a-8e14-d6a068c38863
