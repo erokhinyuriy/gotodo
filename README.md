@@ -2,6 +2,8 @@
 
 Web API service for ToDo list application.
 
+Author: Yuriy Erokhin
+
 ## Docker
 
 ```
