@@ -35,7 +35,6 @@ type postgresStorage struct {
 }
 
 func NewPostgresStorage() (*postgresStorage, error) {
-	//dsn := "host=localhost user=userlst password=admin dbname=todo port=5433 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(DockerPgConnection), &gorm.Config{})
 	if err != nil {
 		return &postgresStorage{}, ErrConnectionFail
