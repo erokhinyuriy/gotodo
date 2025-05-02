@@ -54,7 +54,7 @@ func (s *postgresStorage) CreateUser(user *e.User) (string, error) {
 	if result.Error != nil {
 		return MsgIncorrectSignUp, result.Error
 	}
-	return "success", nil
+	return "Welcome! Your registration was completed successfully.", nil
 }
 
 // LIST
