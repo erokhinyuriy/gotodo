@@ -11,6 +11,8 @@ import (
 )
 
 var (
+	MsgIncorrectSignUp = "sign up is failed"
+
 	ErrConnectionFail   = errors.New("cannot connection to db")
 	ErrCloseConnection  = errors.New("errors during attemption close db connection")
 	ErrListNotFound     = errors.New("list not found")
@@ -41,7 +43,18 @@ func NewPostgresStorage() (*postgresStorage, error) {
 	}
 	db.AutoMigrate(&e.TdList{})
 	db.AutoMigrate(&e.TdTask{})
+	db.AutoMigrate(&e.User{})
 	return &postgresStorage{db: db}, nil
+}
+
+// USER
+
+func (s *postgresStorage) CreateUser(user *e.User) (string, error) {
+	result := s.db.Create(&user)
+	if result.Error != nil {
+		return MsgIncorrectSignUp, result.Error
+	}
+	return "success", nil
 }
 
 // LIST

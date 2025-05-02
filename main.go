@@ -4,6 +4,7 @@ import (
 	e "example/gotodo/entity"
 	lstservice "example/gotodo/service/listservice"
 	tservice "example/gotodo/service/taskservice"
+	uservice "example/gotodo/service/userservice"
 	str "example/gotodo/storage"
 	"fmt"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	cors "github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -18,6 +20,8 @@ var (
 	MsgGuidNotParsed           = "guid cannot been parsed"
 	MsgListJsonCannotParsed    = "error occurs parse list json"
 	MsgTaskJsonCannotParsed    = "error occurs parse task json"
+	MsgUserJsonCannotParsed    = "error occurs parse user json"
+	MsgErrWrongPasswordHash    = "Password is incorrect"
 )
 
 func main() {
@@ -33,6 +37,8 @@ func main() {
 	listService := lstservice.New(storage)
 	// сервис для работы с TdTask
 	taskService := tservice.New(storage)
+	// сервис для работы с User
+	userService := uservice.New(storage)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
@@ -48,6 +54,34 @@ func main() {
 
 	r.Use(corsSettings)
 	r.Use(cors.Default())
+
+	/*
+	 * Auth
+	 */
+
+	r.POST("/signup", func(c *gin.Context) {
+		var user e.User
+
+		if err := c.BindJSON(&user); err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgUserJsonCannotParsed))
+		}
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgErrWrongPasswordHash))
+		}
+
+		user.Password = string(hash)
+
+		result, err := userService.CreateUser(&user)
+
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(fmt.Sprintf("%s", err)))
+		}
+
+		c.IndentedJSON(http.StatusCreated, result)
+	})
 
 	/*
 	 * LISTS
