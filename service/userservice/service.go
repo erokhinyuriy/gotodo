@@ -6,6 +6,7 @@ import (
 
 type UserRepository interface {
 	CreateUser(user *e.User) (string, error)
+	GetUser(email string) (e.User, error)
 }
 
 type service struct {
@@ -18,4 +19,8 @@ func New(repo UserRepository) *service {
 
 func (u *service) CreateUser(user *e.User) (string, error) {
 	return u.repo.CreateUser(user)
+}
+
+func (u *service) GetUser(email string) (e.User, error) {
+	return u.repo.GetUser(email)
 }

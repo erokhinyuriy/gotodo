@@ -13,6 +13,8 @@ import (
 var (
 	MsgIncorrectSignUp = "sign up is failed"
 
+	ErrUserNotFound = errors.New("user not found")
+
 	ErrConnectionFail   = errors.New("cannot connection to db")
 	ErrCloseConnection  = errors.New("errors during attemption close db connection")
 	ErrListNotFound     = errors.New("list not found")
@@ -55,6 +57,15 @@ func (s *postgresStorage) CreateUser(user *e.User) (string, error) {
 		return MsgIncorrectSignUp, result.Error
 	}
 	return "Welcome! Your registration was completed successfully.", nil
+}
+
+func (s *postgresStorage) GetUser(email string) (e.User, error) {
+	var user e.User
+	err := s.db.First(&user, "email = ?", email).Error
+	if err != nil {
+		return user, ErrUserNotFound
+	}
+	return user, nil
 }
 
 // LIST
