@@ -14,6 +14,31 @@ docker compose -f docker-compose.yml up
 
 To run the service locally, use :8447 but if you run the application in a docker container, you must use :8778.
 
+If you want to execute requests, you must be authorized. To do this, create a user (for example):
+
+POST: http://localhost:8447/signup 
+
+With body request:
+
+```
+{
+    "username": "admin",
+    "email": "admin@admin.com",
+    "password": "pass1234$"
+}
+```
+
+and sign in:
+
+POST: http://localhost:8447/sighin
+
+```
+{
+    "email": "admin@admin.com",
+    "password": "pass1234$"
+}
+```
+
 API's using Postman:
 
 For LISTS
