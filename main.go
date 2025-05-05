@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	e "example/gotodo/entity"
 	"example/gotodo/middleware"
 	lstservice "example/gotodo/service/listservice"
@@ -125,7 +126,12 @@ func main() {
 
 	// GetAll
 	r.GET("/lists", middleware.CheckAuth, func(c *gin.Context) {
-		lists, err := listService.GetAll()
+		uid, err := getUserId(c)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(fmt.Sprintf("%s", err)))
+			return
+		}
+		lists, err := listService.GetAll(uid)
 		if err != nil {
 			sErr := fmt.Sprintf(MsgGettingListsErrorOccurs, err)
 			c.IndentedJSON(http.StatusNotFound, initMessage(sErr))
@@ -139,23 +145,33 @@ func main() {
 		guidId, err := uuid.Parse(id)
 		if err != nil {
 			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgGuidNotParsed))
+			return
 		}
 		list, err := listService.GetByID(guidId)
 		if err != nil {
 			c.IndentedJSON(http.StatusNotFound, initMessage(fmt.Sprintf("%s", err)))
+			return
 		}
 		c.IndentedJSON(http.StatusOK, list)
 	})
 
 	// Create
 	r.POST("/lists", middleware.CheckAuth, func(c *gin.Context) {
+		uid, err := getUserId(c)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, initMessage(fmt.Sprintf("%s", err)))
+			return
+		}
 		var list e.TdList
 		if err := c.BindJSON(&list); err != nil {
 			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgListJsonCannotParsed))
+			return
 		}
+		list.UserId = uid
 		guid, err := listService.Create(&list)
 		if err != nil {
 			c.IndentedJSON(http.StatusBadRequest, initMessage(fmt.Sprintf("%s", err)))
+			return
 		}
 
 		c.IndentedJSON(http.StatusCreated, guid)
@@ -250,6 +266,25 @@ func main() {
 	})
 
 	r.Run("0.0.0.0:8447")
+}
+
+func getUserId(c *gin.Context) (uuid.UUID, error) {
+	// not working
+	tokenString, err := c.Cookie("Authorization")
+	if err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+	}
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("SECRET")), nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
+	if err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+	}
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		uid := claims["sub"].(uuid.UUID)
+		return uid, nil
+	}
+	return uuid.Nil, errors.New("user undefined")
 }
 
 func CORSMiddleware() gin.HandlerFunc {
