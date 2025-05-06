@@ -72,7 +72,7 @@ func (s *postgresStorage) GetUser(email string) (e.User, error) {
 
 func (s *postgresStorage) GetAll(uid uuid.UUID) ([]e.TdList, error) {
 	var lists []e.TdList
-	err := s.db.Model(&e.TdList{UserId: uid}).Find(&lists).Error
+	err := s.db.Model(&e.TdList{}).Find(&lists, "user_id = ?", uid).Error
 	if err != nil {
 		return lists, ErrWithGettingLists
 	}

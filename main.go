@@ -28,6 +28,7 @@ var (
 	MsgUserJsonCannotParsed    = "error occurs parse user json"
 	MsgErrWrongPasswordHash    = "Password is incorrect"
 	MsgCannotCreateToken       = "Cannot to create a token"
+	MsgErrUserUndefined        = "user undefined"
 )
 
 func main() {
@@ -158,6 +159,7 @@ func main() {
 	// Create
 	r.POST("/lists", middleware.CheckAuth, func(c *gin.Context) {
 		uid, err := getUserId(c)
+		fmt.Println("uid: " + uid.String())
 		if err != nil {
 			c.IndentedJSON(http.StatusBadRequest, initMessage(fmt.Sprintf("%s", err)))
 			return
@@ -269,7 +271,6 @@ func main() {
 }
 
 func getUserId(c *gin.Context) (uuid.UUID, error) {
-	// not working
 	tokenString, err := c.Cookie("Authorization")
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
@@ -281,10 +282,14 @@ func getUserId(c *gin.Context) (uuid.UUID, error) {
 		c.AbortWithStatus(http.StatusUnauthorized)
 	}
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		uid := claims["sub"].(uuid.UUID)
+		strUid := claims["sub"].(string)
+		uid, err := uuid.Parse(strUid)
+		if err != nil {
+			return uuid.Nil, err
+		}
 		return uid, nil
 	}
-	return uuid.Nil, errors.New("user undefined")
+	return uuid.Nil, errors.New(MsgErrUserUndefined)
 }
 
 func CORSMiddleware() gin.HandlerFunc {
