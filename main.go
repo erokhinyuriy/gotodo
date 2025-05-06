@@ -21,14 +21,15 @@ import (
 )
 
 var (
-	MsgGettingListsErrorOccurs = "error occurs getting lists: $s"
-	MsgGuidNotParsed           = "guid cannot been parsed"
-	MsgListJsonCannotParsed    = "error occurs parse list json"
-	MsgTaskJsonCannotParsed    = "error occurs parse task json"
-	MsgUserJsonCannotParsed    = "error occurs parse user json"
-	MsgErrWrongPasswordHash    = "Password is incorrect"
-	MsgCannotCreateToken       = "Cannot to create a token"
-	MsgErrUserUndefined        = "user undefined"
+	MsgGettingListsErrorOccurs  = "error occurs getting lists: $s"
+	MsgGuidNotParsed            = "guid cannot been parsed"
+	MsgListJsonCannotParsed     = "error occurs parse list json"
+	MsgTaskJsonCannotParsed     = "error occurs parse task json"
+	MsgUserJsonCannotParsed     = "error occurs parse user json"
+	MsgErrWrongPasswordHash     = "Password is incorrect"
+	MsgCannotCreateToken        = "Cannot to create a token"
+	MsgErrUserUndefined         = "user undefined"
+	MsgErrUserAlreadyAuthorized = "user is already authorized"
 )
 
 func main() {
@@ -100,25 +101,35 @@ func main() {
 			c.IndentedJSON(http.StatusNotFound, initMessage(err.Error()))
 			return
 		}
-		passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))
-		if passErr != nil {
-			c.IndentedJSON(http.StatusBadRequest, initMessage(passErr.Error()))
+		uid, err := getUserId(c)
+		if err != nil {
+			if user.Id == uid {
+				// TDOD: make a logs instead of fmt
+				fmt.Println("Atempt to login with different users")
+			}
+			passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))
+			if passErr != nil {
+				c.IndentedJSON(http.StatusBadRequest, initMessage(passErr.Error()))
+				return
+			}
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+				"sub": user.Id,
+				"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
+			})
+			tokenString, tokenErr := token.SignedString([]byte(os.Getenv("SECRET")))
+			if tokenErr != nil {
+				c.IndentedJSON(http.StatusBadRequest, initMessage(MsgCannotCreateToken))
+				return
+			}
+
+			c.SetSameSite(http.SameSiteLaxMode)
+			c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
+
+			c.IndentedJSON(http.StatusOK, tokenString)
+		} else {
+			c.IndentedJSON(http.StatusConflict, initMessage(MsgErrUserAlreadyAuthorized))
 			return
 		}
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"sub": user.Id,
-			"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
-		})
-		tokenString, tokenErr := token.SignedString([]byte(os.Getenv("SECRET")))
-		if tokenErr != nil {
-			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgCannotCreateToken))
-			return
-		}
-
-		c.SetSameSite(http.SameSiteLaxMode)
-		c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
-
-		c.IndentedJSON(http.StatusOK, tokenString)
 	})
 
 	/*
