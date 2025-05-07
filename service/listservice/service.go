@@ -7,7 +7,7 @@ import (
 )
 
 type ListRepository interface {
-	GetByID(id uuid.UUID) (e.TdList, error)
+	GetByID(id uuid.UUID, uid uuid.UUID) (e.TdList, error)
 	GetAll(uid uuid.UUID) ([]e.TdList, error)
 	Create(list *e.TdList) (uuid.UUID, error)
 	Update(list *e.TdList) (string, error)
@@ -26,8 +26,8 @@ func (lst *service) GetAll(uid uuid.UUID) ([]e.TdList, error) {
 	return lst.repo.GetAll(uid)
 }
 
-func (lst *service) GetByID(id uuid.UUID) (e.TdList, error) {
-	return lst.repo.GetByID(id)
+func (lst *service) GetByID(id uuid.UUID, uid uuid.UUID) (e.TdList, error) {
+	return lst.repo.GetByID(id, uid)
 }
 
 func (lst *service) Create(list *e.TdList) (uuid.UUID, error) {

@@ -79,9 +79,9 @@ func (s *postgresStorage) GetAll(uid uuid.UUID) ([]e.TdList, error) {
 	return lists, nil
 }
 
-func (s *postgresStorage) GetByID(id uuid.UUID) (e.TdList, error) {
+func (s *postgresStorage) GetByID(id uuid.UUID, uid uuid.UUID) (e.TdList, error) {
 	var list e.TdList
-	err := s.db.Preload("Tasks").First(&list, id).Error
+	err := s.db.Preload("Tasks").Where("id = ? AND user_id = ?", id, uid).First(&list).Error //.First(&list, id).Error
 	if err != nil {
 		return list, ErrListNotFound
 	}

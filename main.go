@@ -106,6 +106,7 @@ func main() {
 			if user.Id == uid {
 				// TDOD: make a logs instead of fmt
 				fmt.Println("Atempt to login with different users")
+				return
 			}
 			passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))
 			if passErr != nil {
@@ -159,7 +160,12 @@ func main() {
 			c.IndentedJSON(http.StatusBadRequest, initMessage(MsgGuidNotParsed))
 			return
 		}
-		list, err := listService.GetByID(guidId)
+		uid, err := getUserId(c)
+		if err != nil {
+			c.IndentedJSON(http.StatusNotFound, initMessage(fmt.Sprintf("%s", err)))
+			return
+		}
+		list, err := listService.GetByID(guidId, uid)
 		if err != nil {
 			c.IndentedJSON(http.StatusNotFound, initMessage(fmt.Sprintf("%s", err)))
 			return
