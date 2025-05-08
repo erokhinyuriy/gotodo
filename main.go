@@ -9,9 +9,12 @@ import (
 	uservice "example/gotodo/service/userservice"
 	str "example/gotodo/storage"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
+
+	logger "example/gotodo/sloglogger"
 
 	cors "github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -41,6 +44,8 @@ func main() {
 		panic(err)
 	}
 
+	//
+	sLogger := logger.New()
 	// сервис для работы с TdList
 	listService := lstservice.New(storage)
 	// сервис для работы с TdTask
@@ -128,6 +133,7 @@ func main() {
 
 			c.IndentedJSON(http.StatusOK, tokenString)
 		} else {
+			sLogger.Warn("/signin: "+MsgErrUserAlreadyAuthorized, slog.Int("version", 1.0))
 			c.IndentedJSON(http.StatusConflict, initMessage(MsgErrUserAlreadyAuthorized))
 			return
 		}
