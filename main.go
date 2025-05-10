@@ -29,8 +29,8 @@ var (
 	MsgListJsonCannotParsed     = "error occurs parse list json"
 	MsgTaskJsonCannotParsed     = "error occurs parse task json"
 	MsgUserJsonCannotParsed     = "error occurs parse user json"
-	MsgErrWrongPasswordHash     = "Password is incorrect"
-	MsgCannotCreateToken        = "Cannot to create a token"
+	MsgErrWrongPasswordHash     = "password is incorrect"
+	MsgCannotCreateToken        = "cannot to create a token"
 	MsgErrUserUndefined         = "user undefined"
 	MsgErrUserAlreadyAuthorized = "user is already authorized"
 )
@@ -44,7 +44,7 @@ func main() {
 		panic(err)
 	}
 
-	//
+	// logger
 	sLogger := logger.New()
 	// сервис для работы с TdList
 	listService := lstservice.New(storage)
@@ -109,8 +109,7 @@ func main() {
 		uid, err := getUserId(c)
 		if err != nil {
 			if user.Id == uid {
-				// TDOD: make a logs instead of fmt
-				fmt.Println("Atempt to login with different users")
+				sLogger.Warn("/signin"+MsgErrUserAlreadyAuthorized, slog.Int("version", 1.0))
 				return
 			}
 			passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))
