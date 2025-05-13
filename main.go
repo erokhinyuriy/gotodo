@@ -4,17 +4,17 @@ import (
 	"errors"
 	e "example/gotodo/entity"
 	"example/gotodo/middleware"
+	rabbit "example/gotodo/rabbitmq"
 	lstservice "example/gotodo/service/listservice"
 	tservice "example/gotodo/service/taskservice"
 	uservice "example/gotodo/service/userservice"
+	logger "example/gotodo/sloglogger"
 	str "example/gotodo/storage"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
-
-	logger "example/gotodo/sloglogger"
 
 	cors "github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -44,6 +44,8 @@ func main() {
 		panic(err)
 	}
 
+	// rabbitmq
+	rmq := rabbit.NewPublisher()
 	// logger
 	sLogger := logger.New()
 	// сервис для работы с TdList
@@ -110,6 +112,7 @@ func main() {
 		if err != nil {
 			if user.Id == uid {
 				sLogger.Warn("/signin"+MsgErrUserAlreadyAuthorized, slog.Int("version", 1.0))
+				rmq.Publish("/signin" + MsgErrUserAlreadyAuthorized)
 				return
 			}
 			passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))
@@ -133,6 +136,7 @@ func main() {
 			c.IndentedJSON(http.StatusOK, tokenString)
 		} else {
 			sLogger.Warn("/signin: "+MsgErrUserAlreadyAuthorized, slog.Int("version", 1.0))
+			rmq.Publish("signin: " + MsgErrUserAlreadyAuthorized)
 			c.IndentedJSON(http.StatusConflict, initMessage(MsgErrUserAlreadyAuthorized))
 			return
 		}

@@ -6,8 +6,12 @@ import (
 	"github.com/wagslane/go-rabbitmq"
 )
 
-// w.i.p
-func Publish(message string) error {
+type rabbit struct {
+	publisher *rabbitmq.Publisher
+}
+
+func NewPublisher() *rabbit {
+	// error connection, need to fix
 	conn, err := rabbitmq.NewConn(
 		"amqp://guest:guest@localhost",
 		rabbitmq.WithConnectionOptionsLogging,
@@ -26,10 +30,14 @@ func Publish(message string) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer publisher.Close()
+	return &rabbit{publisher: publisher}
+}
 
-	err = publisher.Publish(
-		[]byte("hello, world"),
+// w.i.p
+func (r *rabbit) Publish(message string) error {
+
+	err := r.publisher.Publish(
+		[]byte(message),
 		[]string{"my_routing_key"},
 		rabbitmq.WithPublishOptionsContentType("application/json"),
 		rabbitmq.WithPublishOptionsExchange("events"),
