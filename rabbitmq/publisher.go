@@ -11,7 +11,6 @@ type rabbit struct {
 }
 
 func NewPublisher() *rabbit {
-	// error connection, need to fix
 	conn, err := rabbitmq.NewConn(
 		"amqp://admin:password@gotodo-rabbitmq:5672/",
 		rabbitmq.WithConnectionOptionsLogging,
@@ -33,7 +32,6 @@ func NewPublisher() *rabbit {
 	return &rabbit{publisher: publisher}
 }
 
-// w.i.p
 func (r *rabbit) Publish(message string) error {
 
 	err := r.publisher.Publish(
