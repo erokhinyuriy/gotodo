@@ -13,7 +13,7 @@ type rabbit struct {
 func NewPublisher() *rabbit {
 	// error connection, need to fix
 	conn, err := rabbitmq.NewConn(
-		"amqp://guest:guest@localhost",
+		"amqp://admin:password@gotodo-rabbitmq:5672/",
 		rabbitmq.WithConnectionOptionsLogging,
 	)
 	if err != nil {
