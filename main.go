@@ -112,7 +112,11 @@ func main() {
 		if err != nil {
 			if user.Id == uid {
 				sLogger.Warn("/signin"+MsgErrUserAlreadyAuthorized, slog.Int("version", 1.0))
-				rmq.Publish("/signin" + MsgErrUserAlreadyAuthorized)
+				errRmq := rmq.Publish("/signin" + MsgErrUserAlreadyAuthorized)
+
+				if errRmq != nil {
+					sLogger.Error(errRmq.Error())
+				}
 				return
 			}
 			passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))

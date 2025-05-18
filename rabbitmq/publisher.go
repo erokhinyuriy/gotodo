@@ -12,23 +12,24 @@ type rabbit struct {
 
 func NewPublisher() *rabbit {
 	conn, err := rabbitmq.NewConn(
-		"amqp://admin:password@gotodo-rabbitmq:5672/",
+		"amqp://guest:guest@rabbitmq:5672/",
 		rabbitmq.WithConnectionOptionsLogging,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
-	defer conn.Close()
+	//defer conn.Close()
 
 	publisher, err := rabbitmq.NewPublisher(
 		conn,
 		rabbitmq.WithPublisherOptionsLogging,
-		rabbitmq.WithPublisherOptionsExchangeName("events"),
+		rabbitmq.WithPublisherOptionsExchangeName("logs"),
 		rabbitmq.WithPublisherOptionsExchangeDeclare,
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return &rabbit{publisher: publisher}
 }
 
@@ -36,10 +37,11 @@ func (r *rabbit) Publish(message string) error {
 
 	err := r.publisher.Publish(
 		[]byte(message),
-		[]string{"my_routing_key"},
+		[]string{"black"},
 		rabbitmq.WithPublishOptionsContentType("application/json"),
-		rabbitmq.WithPublishOptionsExchange("events"),
+		rabbitmq.WithPublishOptionsExchange("logs"),
 	)
+
 	if err != nil {
 		return err
 	}
