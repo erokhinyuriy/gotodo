@@ -48,3 +48,7 @@ func (r *rabbit) Publish(message string) error {
 
 	return nil
 }
+
+func (r *rabbit) CloseRmq() {
+	r.publisher.Close()
+}

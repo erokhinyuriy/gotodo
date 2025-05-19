@@ -46,6 +46,8 @@ func main() {
 
 	// rabbitmq
 	rmq := rabbit.NewPublisher()
+	defer rmq.CloseRmq()
+
 	// logger
 	sLogger := logger.New()
 	// сервис для работы с TdList
